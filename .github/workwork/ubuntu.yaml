@@ -8,36 +8,27 @@ on:
 
 jobs:
   deploy:
-    runs-on:
-      - self-hosted
-      - Linux
-      - X64
-
+    runs-on: ubuntu-latest
+    #runs-on: self-hosted
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
 
-      - name: Check Runner
+      # - name: Set up JDK
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     distribution: 'temurin' 
+      #     java-version: '11'
+
+      - name: Build WAR using Maven
+        run: mvn clean package
+       # run: mvn clean package -DskipTests
+
+      - name: Deploy WAR to Tomcat
         run: |
-          echo "Runner Name: $RUNNER_NAME"
-          echo "Runner OS: $RUNNER_OS"
-          pwd
-          ls -la
-
-      - name: Check Java
-        run: java -version
-
-      - name: Check Maven
-        run: mvn -version
-
-      - name: Build WAR
-        run: mvn clean package -DskipTests
-
-      - name: Deploy WAR
-        run: |
-          WAR_FILE=$(find target -name "*.war" | head -n 1)
-          APP_NAME=madhuapp
-
-          curl -u "${{ secrets.TOMCAT_USERNAME }}:${{ secrets.TOMCAT_PASSWORD }}" \
-            --upload-file "$WAR_FILE" \
-            "http://${{ secrets.TOMCAT_HOST }}:8081/manager/text/deploy?path=/$APP_NAME&update=true"
+              WAR_FILE=$(ls target/*.war | head -n 1)
+              APP_NAME=madhuapp
+              curl -u "${{ secrets.TOMCAT_USERNAME }}:${{ secrets.TOMCAT_PASSWORD }}" \
+                --upload-file "$WAR_FILE" \
+                "http://${{ secrets.TOMCAT_HOST }}:8081/manager/text/deploy?path=/$APP_NAME&update=true"
